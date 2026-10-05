@@ -1,30 +1,136 @@
 @import "tailwindcss";
 
-/* Les jetons de design (couleurs, polices, espacements) arrivent avec le ticket T-016. */
-:root {
-  --background: #ffffff;
-  --foreground: #14213d;
+/* Jetons de design de Valise (ticket T-016), d'après la charte graphique. */
+@theme {
+  /* Couleurs de la marque */
+  --color-nuit: #14213d;
+  --color-blanc: #ffffff;
+  --color-gris: #5b6374;
+  --color-ciel: #8ec5ff;
+  --color-creme: #fff3e2;
+
+  /* Couleurs des villes */
+  --color-rome: #c47a2c;
+  --color-paris: #7a5c45;
+  --color-lisbonne: #f2c230;
+  --color-barcelone: #2f7fc1;
+  --color-londres: #d9312b;
+  --color-amsterdam: #f07a1a;
+  --color-berlin: #5baf3f;
+  --color-bruxelles: #8d99a6;
+  --color-dublin: #1e7b45;
+  --color-edimbourg: #7b4f9e;
+  --color-marrakech: #3d4fd1;
+  --color-louxor: #2a9d8f;
+  --color-new-york: #f6b10a;
+  --color-montreal: #7fb2d6;
+  --color-tokyo: #e58fb0;
+
+  /* Escales voisines */
+  --color-florence: #a85f24;
+  --color-pise: #d9994a;
+  --color-lille: #8c4f3a;
+  --color-lyon: #a07656;
+  --color-strasbourg: #96625f;
+
+  /* Polices */
+  --font-script: var(--font-grand-hotel), "Brush Script MT", cursive;
+  --font-display:
+    var(--font-rubik), "Arial Rounded MT Bold", "Helvetica Neue", sans-serif;
+  --font-sans: var(--font-atkinson), Verdana, "Segoe UI", sans-serif;
+
+  /* Arrondis */
+  --radius-carte: 1.75rem;
+  --radius-panneau: 2rem;
+
+  /* Mouvement */
+  --ease-valise: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+/* Couleurs d'interface, qui suivent le mode clair ou sombre du téléphone. */
+:root {
+  --fond: #ffffff;
+  --surface: #f3f5f8;
+  --trait: #e4e7ec;
+  --encre: #14213d;
+  --discret: #5b6374;
+  --panneau: #14213d;
+  --sur-panneau: #ffffff;
+  --sur-panneau-discret: #b8c2d8;
+  --bouton: #14213d;
+  --sur-bouton: #ffffff;
+  --focus: #2f6db5;
+  /* Couleur de la ville affichée ; neutre en dehors des pages de ville. */
+  --ville: var(--encre);
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0e1630;
-    --foreground: #f2f4f8;
+    --fond: #0e1630;
+    --surface: #16213f;
+    --trait: #26335a;
+    --encre: #f2f4f8;
+    --discret: #a9b3c7;
+    --panneau: #1b2a52;
+    --sur-panneau-discret: #c3cce0;
+    --bouton: #ffffff;
+    --sur-bouton: #14213d;
+    --focus: #8ec5ff;
+    color-scheme: dark;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+@theme inline {
+  --color-fond: var(--fond);
+  --color-surface: var(--surface);
+  --color-trait: var(--trait);
+  --color-encre: var(--encre);
+  --color-discret: var(--discret);
+  --color-panneau: var(--panneau);
+  --color-sur-panneau: var(--sur-panneau);
+  --color-sur-panneau-discret: var(--sur-panneau-discret);
+  --color-bouton: var(--bouton);
+  --color-sur-bouton: var(--sur-bouton);
+  --color-focus: var(--focus);
+  --color-ville: var(--ville);
+}
+
+/* Ombre des autocollants, à deux niveaux. */
+@utility autocollant {
+  filter: drop-shadow(0 4px 5px rgb(0 0 0 / 0.22))
+    drop-shadow(0 16px 22px rgb(0 0 0 / 0.18));
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 5.5rem;
+  }
+
+  body {
+    background: var(--fond);
+    color: var(--encre);
+    font-family: var(--font-sans);
+    font-size: 1.125rem;
+    line-height: 1.6;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+}
+
+/* Animations coupées si le téléphone demande de les réduire. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
