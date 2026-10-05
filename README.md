@@ -42,3 +42,24 @@ Le site s'ouvre sur http://localhost:3000.
 ## Configuration
 
 Copie `.env.example` en `.env.local` pour le développement. Aucune vraie clé ne doit être versionnée.
+
+## Déploiement
+
+Le site est déployé par [Coolify](https://coolify.io), derrière son proxy Traefik, sur le serveur de Lola.
+
+1. Chaque push sur `main` lance la CI GitHub Actions : lint, types, mise en forme et construction.
+2. Si tout passe, la CI appelle le webhook de déploiement de Coolify.
+3. Coolify construit l'image à partir du `Dockerfile` et remplace l'ancienne version, une fois le contrôle de santé `/api/health` au vert.
+
+### Configuration de Coolify, une seule fois
+
+1. Crée une application à partir du dépôt `stptlola/valise`, branche `main`.
+2. Choisis le build pack « Dockerfile » et le port 3000.
+3. Garde l'adresse sslip.io proposée par Coolify, en HTTPS, tant que le nom de domaine n'est pas acheté.
+4. Règle le contrôle de santé sur le chemin `/api/health`.
+5. Désactive le déploiement automatique de Coolify, pour que la CI soit seule à le déclencher.
+6. Dans « Keys & Tokens », puis « API Tokens », crée un jeton avec la permission de déploiement.
+7. Dans la configuration de l'application, section « Webhooks », copie le « Deploy Webhook (auth required) ».
+8. Sur GitHub, dans Settings, puis « Secrets and variables » et « Actions », ajoute deux secrets : `COOLIFY_WEBHOOK` (le webhook) et `COOLIFY_TOKEN` (le jeton).
+
+Si l'API de Coolify est désactivée, active-la dans « Settings », puis « Advanced ».
