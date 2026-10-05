@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Vérifications
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run format:check
+      - run: npm run build
+
+  deploy:
+    name: Déploiement Coolify
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      COOLIFY_WEBHOOK: ${{ secrets.COOLIFY_WEBHOOK }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+    steps:
+      - name: Déclencher le déploiement
+        if: env.COOLIFY_WEBHOOK != '' && env.COOLIFY_TOKEN != ''
+        run: |
+          curl --fail-with-body --silent --show-error --max-time 60 \
+            --header "Authorization: Bearer $COOLIFY_TOKEN" \
+            "$COOLIFY_WEBHOOK"
+      - name: Prévenir si les secrets manquent
+        if: env.COOLIFY_WEBHOOK == '' || env.COOLIFY_TOKEN == ''
+        run: echo "::warning::COOLIFY_WEBHOOK ou COOLIFY_TOKEN absent dans les secrets du dépôt, déploiement ignoré."
