@@ -47,3 +47,6 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 /blob-report/
+
+# client Prisma, généré à la construction
+/src/generated/

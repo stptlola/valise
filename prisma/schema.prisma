@@ -1,0 +1,851 @@
+// Modèle de données de Valise (ticket T-009), d'après le cahier des charges.
+// Les modèles User, Account, Session et VerificationToken gardent les noms attendus par Auth.js.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Énumérations ────────────────────────────────────────────────────────────
+
+enum TypeDestination {
+  COMPLETE
+  FICHE
+  VOISINE
+}
+
+enum Statut {
+  BROUILLON
+  PUBLIE
+}
+
+enum Acces {
+  GRATUIT
+  APERCU
+  PAYANT
+}
+
+enum Profil {
+  SOLO
+  COUPLE
+  FAMILLE
+  AMIS
+  MOBILITE_REDUITE
+}
+
+enum Categorie {
+  VOIR
+  MANGER
+  BOIRE
+  SORTIR
+  DORMIR
+  ACHETER
+}
+
+enum Moment {
+  MATIN
+  MIDI
+  APRES_MIDI
+  SOIR
+}
+
+enum Variante {
+  NORMALE
+  PLUIE
+}
+
+enum Niveau {
+  FAIBLE
+  MOYEN
+  FORT
+}
+
+enum StyleVoyage {
+  ECONOMIQUE
+  CONFORT
+  PREMIUM
+}
+
+enum Poste {
+  HEBERGEMENT
+  REPAS
+  VISITES
+  TRANSPORTS
+}
+
+enum Role {
+  UTILISATEUR
+  ADMIN
+}
+
+enum StatutAchat {
+  EN_ATTENTE
+  PAYE
+  REMBOURSE
+  ANNULE
+}
+
+enum OrigineDroit {
+  ACHAT
+  LOT
+  OFFRE_LANCEMENT
+  CARTE_CADEAU
+  RECOMPENSE
+}
+
+enum StatutDemande {
+  NOUVELLE
+  EN_COURS
+  TRAITEE
+  REFUSEE
+}
+
+enum StatutModeration {
+  EN_ATTENTE
+  A_VERIFIER
+  VALIDEE
+  REFUSEE
+}
+
+enum TypeSignalement {
+  ADRESSE_FERMEE
+  PEPITE
+  AUTRE
+}
+
+enum TypeAutocollant {
+  ESCALE
+  CONTRIBUTEUR
+  SIGNALEMENT
+}
+
+enum TypeRecompense {
+  REDUCTION
+  ESCALE_OFFERTE
+  AUTOCOLLANT
+}
+
+enum TypeCollection {
+  PAYS
+  THEME
+}
+
+enum TypePass {
+  TOUTES_ESCALES
+  COLLECTION
+}
+
+// ─── Contenus ────────────────────────────────────────────────────────────────
+
+model Destination {
+  id                String          @id // identifiant lisible : rome, paris, new-york…
+  nom               String
+  pays              String
+  code              String          @unique // code à trois lettres : ROM, PAR…
+  couleur           String // #RRGGBB
+  type              TypeDestination
+  autocollant       String?
+  latitude          Float?
+  longitude         Float?
+  devise            String? // code ISO 4217, absent dans la zone euro
+  pourboires        String?
+  conseilsOfficiels String? // lien vers les conseils aux voyageurs
+  budgetJourMin     Int? // fourchette de budget de la fiche, en euros par jour
+  budgetJourMax     Int?
+  dureeIdeale       String?
+  profilsConseilles Profil[]
+  statut            Statut          @default(BROUILLON)
+  creeLe            DateTime        @default(now())
+  modifieLe         DateTime        @updatedAt
+
+  escale         Escale?
+  climat         ClimatMensuel[]
+  elementsValise ElementValise[]
+  inscriptions   InscriptionPrevenir[]
+  favoris        Favori[]
+  collections    CollectionDestination[]
+  contributions  Contribution[]
+  meteo          MeteoJour[]
+}
+
+model ClimatMensuel {
+  destinationId String
+  mois          Int // 1 à 12
+  tempMin       Float
+  tempMax       Float
+  joursPluie    Int?
+  affluence     Niveau?
+  prix          Niveau?
+  evenements    String?
+  source        String?
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@id([destinationId, mois])
+}
+
+model Escale {
+  id              String   @id @default(cuid())
+  destinationId   String   @unique
+  principaleId    String? // pour une escale voisine : son escale complète
+  prixCentimes    Int
+  statut          Statut   @default(BROUILLON)
+  misAJourLe      DateTime @default(now())
+  listeGoogleMaps String?
+  creeLe          DateTime @default(now())
+  modifieLe       DateTime @updatedAt
+
+  destination Destination @relation(fields: [destinationId], references: [id])
+  principale  Escale?     @relation("EscalesVoisines", fields: [principaleId], references: [id])
+  voisines    Escale[]    @relation("EscalesVoisines")
+
+  parties      PartieEscale[]
+  nouveautes   Nouveaute[]
+  quartiers    Quartier[]
+  adresses     Adresse[]
+  itineraires  Itineraire[]
+  modeEscale   ItineraireAeroport[]
+  taches       TacheCompteARebours[]
+  prixReperes  PrixRepere[]
+  lexique      PhraseLexique[]
+  droits       DroitEscale[]
+  lots         LotEscale[]
+  departs      DepartPrevu[]
+  lignes       MaLigne[]
+  valises      ValisePersonnelle[]
+  signalements Signalement[]
+  achats       Achat[]
+}
+
+model PartieEscale {
+  id       String @id @default(cuid())
+  escaleId String
+  numero   Int // 1 à 10
+  titre    String
+  contenu  Json // blocs de texte structurés
+  acces    Acces
+
+  escale Escale @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+
+  @@unique([escaleId, numero])
+}
+
+model Nouveaute {
+  id       String   @id @default(cuid())
+  escaleId String
+  texte    String
+  source   String?
+  dateLe   DateTime
+
+  escale Escale @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+}
+
+model Quartier {
+  id       String @id @default(cuid())
+  escaleId String
+  nom      String
+  ambiance String
+  ordre    Int    @default(0)
+
+  escale   Escale    @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+  adresses Adresse[]
+
+  @@unique([escaleId, nom])
+}
+
+model Adresse {
+  id             String    @id @default(cuid())
+  escaleId       String
+  quartierId     String?
+  nom            String
+  categorie      Categorie
+  prix           Int // de 1 (€) à 4 (€€€€)
+  prixRepere     String?
+  profils        Profil[]
+  pourquoi       String
+  bonASavoir     String?
+  siteOfficiel   String?
+  latitude       Float?
+  longitude      Float?
+  testeeLe       DateTime?
+  testeePar      String?
+  lienPartenaire String?
+  statut         Statut    @default(BROUILLON)
+  creeLe         DateTime  @default(now())
+  modifieLe      DateTime  @updatedAt
+
+  escale        Escale            @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+  quartier      Quartier?         @relation(fields: [quartierId], references: [id], onDelete: SetNull)
+  etapes        EtapeItineraire[]
+  lignes        MaLigneAdresse[]
+  signalements  Signalement[]
+  contributions Contribution[]
+
+  @@index([escaleId, categorie])
+}
+
+model Itineraire {
+  id       String @id @default(cuid())
+  escaleId String
+  duree    Int // en jours : 2, 4 ou 6 (1 ou 2 pour une escale voisine)
+
+  escale Escale           @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+  jours  JourItineraire[]
+
+  @@unique([escaleId, duree])
+}
+
+model JourItineraire {
+  id           String @id @default(cuid())
+  itineraireId String
+  numero       Int
+  titre        String
+
+  itineraire Itineraire        @relation(fields: [itineraireId], references: [id], onDelete: Cascade)
+  etapes     EtapeItineraire[]
+
+  @@unique([itineraireId, numero])
+}
+
+model EtapeItineraire {
+  id           String   @id @default(cuid())
+  jourId       String
+  ordre        Int
+  moment       Moment
+  variante     Variante @default(NORMALE) // PLUIE pour le Plan B pluie
+  titre        String
+  raison       String
+  dureeMinutes Int?
+  conseil      String?
+  adresseId    String?
+
+  jour    JourItineraire @relation(fields: [jourId], references: [id], onDelete: Cascade)
+  adresse Adresse?       @relation(fields: [adresseId], references: [id], onDelete: SetNull)
+
+  @@index([jourId, variante, ordre])
+}
+
+model ItineraireAeroport {
+  id          String @id @default(cuid())
+  escaleId    String
+  aeroport    String
+  dureeHeures Int
+  etapes      Json
+
+  escale Escale @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+}
+
+model TacheCompteARebours {
+  id               String  @id @default(cuid())
+  escaleId         String
+  joursAvantDepart Int
+  texte            String
+  lien             String?
+  source           String?
+  ordre            Int     @default(0)
+
+  escale  Escale        @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+  cochees TacheCochee[]
+}
+
+model PrixRepere {
+  id              String      @id @default(cuid())
+  escaleId        String
+  poste           Poste
+  style           StyleVoyage
+  libelle         String
+  montantCentimes Int // par personne et par jour
+  source          String?
+  verifieLe       DateTime?
+
+  escale Escale @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+
+  @@unique([escaleId, poste, style])
+}
+
+model ElementValise {
+  id            String  @id @default(cuid())
+  destinationId String
+  mois          Int? // absent : valable toute l'année
+  profil        Profil? // absent : valable pour tous
+  categorie     String
+  texte         String
+  ordre         Int     @default(0)
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+}
+
+model PhraseLexique {
+  id            String  @id @default(cuid())
+  escaleId      String
+  francais      String
+  traduction    String
+  prononciation String?
+  audio         String? // chemin du fichier audio créé par la voix de synthèse
+  ordre         Int     @default(0)
+
+  escale Escale @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+}
+
+model Collection {
+  id     String         @id @default(cuid())
+  nom    String
+  type   TypeCollection
+  statut Statut         @default(BROUILLON)
+
+  destinations CollectionDestination[]
+  pass         Pass[]
+}
+
+model CollectionDestination {
+  collectionId  String
+  destinationId String
+
+  collection  Collection  @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, destinationId])
+}
+
+model QuestionFrequente {
+  id       String @id @default(cuid())
+  question String
+  reponse  String
+  ordre    Int    @default(0)
+}
+
+model Media {
+  id              String   @id @default(cuid())
+  chemin          String   @unique
+  largeur         Int
+  hauteur         Int
+  texteAlternatif String
+  credit          String
+  licence         String
+  creeLe          DateTime @default(now())
+}
+
+model MeteoJour {
+  destinationId String
+  jour          DateTime @db.Date
+  tempMin       Float
+  tempMax       Float
+  pluieMm       Float
+  symbole       String?
+  recupereLe    DateTime @default(now())
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@id([destinationId, jour])
+}
+
+model TauxChange {
+  devise     String   @id // code ISO 4217
+  pourUnEuro Float
+  recupereLe DateTime @default(now())
+}
+
+// ─── Utilisateurs (Auth.js) ──────────────────────────────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  image          String?
+  role           Role      @default(UTILISATEUR)
+  profilVoyage   Profil?
+  codeParrainage String    @unique @default(cuid())
+  creeLe         DateTime  @default(now())
+
+  accounts       Account[]
+  sessions       Session[]
+  favoris        Favori[]
+  departs        DepartPrevu[]
+  valises        ValisePersonnelle[]
+  lignes         MaLigne[]
+  voyages        VoyageMarque[]
+  autocollants   AutocollantObtenu[]
+  achats         Achat[]
+  droits         DroitEscale[]
+  cartesAchetees CarteCadeau[]       @relation("CartesAchetees")
+  parrainages    Parrainage[]        @relation("Parrain")
+  parrainePar    Parrainage?         @relation("Filleul")
+  contributions  Contribution[]
+  signalements   Signalement[]
+  recompenses    Recompense[]
+  pass           Pass[]
+  journal        JournalAdmin[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// ─── Utilisateurs (données de Valise) ────────────────────────────────────────
+
+model Favori {
+  userId        String
+  destinationId String
+  creeLe        DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@id([userId, destinationId])
+}
+
+model DepartPrevu {
+  id         String    @id @default(cuid())
+  userId     String
+  escaleId   String
+  dateDepart DateTime  @db.Date
+  dateRetour DateTime? @db.Date
+
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  escale Escale        @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+  taches TacheCochee[]
+
+  @@unique([userId, escaleId])
+}
+
+model TacheCochee {
+  departId String
+  tacheId  String
+  cocheeLe DateTime @default(now())
+
+  depart DepartPrevu         @relation(fields: [departId], references: [id], onDelete: Cascade)
+  tache  TacheCompteARebours @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+
+  @@id([departId, tacheId])
+}
+
+model ValisePersonnelle {
+  id              String   @id @default(cuid())
+  userId          String
+  escaleId        String
+  elementsCoches  String[] // identifiants des éléments de valise cochés
+  elementsAjoutes Json     @default("[]") // éléments ajoutés par la personne, cochés ou non
+  modifieLe       DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  escale Escale @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, escaleId])
+}
+
+model MaLigne {
+  id        String    @id @default(cuid())
+  userId    String
+  escaleId  String
+  jour      DateTime? @db.Date
+  modifieLe DateTime  @updatedAt
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  escale   Escale           @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+  adresses MaLigneAdresse[]
+}
+
+model MaLigneAdresse {
+  ligneId   String
+  adresseId String
+  ordre     Int
+
+  ligne   MaLigne @relation(fields: [ligneId], references: [id], onDelete: Cascade)
+  adresse Adresse @relation(fields: [adresseId], references: [id], onDelete: Cascade)
+
+  @@id([ligneId, adresseId])
+}
+
+model VoyageMarque {
+  id     String   @id @default(cuid())
+  userId String
+  pays   String // code ISO 3166-1 alpha-2
+  ville  String?
+  creeLe DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pays, ville])
+}
+
+model AutocollantObtenu {
+  id        String          @id @default(cuid())
+  userId    String
+  type      TypeAutocollant
+  reference String // destination, ou niveau de contributeur ou de signalement
+  positionX Float? // position sur la valise, de 0 à 1
+  positionY Float?
+  rotation  Float?
+  obtenuLe  DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, reference])
+}
+
+// ─── Ventes ──────────────────────────────────────────────────────────────────
+
+model Achat {
+  id                     String      @id @default(cuid())
+  userId                 String
+  escaleId               String?
+  lotId                  String?
+  montantCentimes        Int
+  devise                 String      @default("EUR")
+  statut                 StatutAchat @default(EN_ATTENTE)
+  codePromoId            String?
+  carteCadeauId          String?
+  montantCarteCentimes   Int         @default(0)
+  parrainageId           String?
+  stripeSessionId        String      @unique
+  stripePaiementId       String?
+  renonciationAccepteeLe DateTime
+  creeLe                 DateTime    @default(now())
+  payeLe                 DateTime?
+
+  user         User          @relation(fields: [userId], references: [id])
+  escale       Escale?       @relation(fields: [escaleId], references: [id])
+  lot          Lot?          @relation(fields: [lotId], references: [id])
+  codePromo    CodePromo?    @relation(fields: [codePromoId], references: [id])
+  carteCadeau  CarteCadeau?  @relation("CarteUtilisee", fields: [carteCadeauId], references: [id])
+  parrainage   Parrainage?   @relation(fields: [parrainageId], references: [id])
+  facture      Facture?
+  retractation Retractation?
+  droits       DroitEscale[]
+}
+
+model Facture {
+  id              String   @id @default(cuid())
+  numero          Int      @unique @default(autoincrement()) // numérotation continue
+  achatId         String   @unique
+  montantCentimes Int
+  emiseLe         DateTime @default(now())
+  fichier         String?
+
+  achat Achat @relation(fields: [achatId], references: [id])
+}
+
+model DroitEscale {
+  userId    String
+  escaleId  String
+  origine   OrigineDroit
+  achatId   String?
+  accordeLe DateTime     @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  escale Escale @relation(fields: [escaleId], references: [id])
+  achat  Achat? @relation(fields: [achatId], references: [id])
+
+  @@id([userId, escaleId])
+}
+
+model Lot {
+  id           String @id @default(cuid())
+  nom          String
+  prixCentimes Int
+  statut       Statut @default(BROUILLON)
+
+  escales LotEscale[]
+  achats  Achat[]
+}
+
+model LotEscale {
+  lotId    String
+  escaleId String
+
+  lot    Lot    @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  escale Escale @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+
+  @@id([lotId, escaleId])
+}
+
+model Retractation {
+  id         String        @id @default(cuid())
+  achatId    String        @unique
+  demandeeLe DateTime      @default(now())
+  statut     StatutDemande @default(NOUVELLE)
+  traiteeLe  DateTime?
+
+  achat Achat @relation(fields: [achatId], references: [id])
+}
+
+model CodePromo {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  pourcentage     Int?
+  montantCentimes Int?
+  debut           DateTime?
+  fin             DateTime?
+  actif           Boolean   @default(true)
+  utilisationsMax Int?
+  utilisations    Int       @default(0)
+  creeLe          DateTime  @default(now())
+
+  achats     Achat[]
+  recompense Recompense?
+}
+
+model CarteCadeau {
+  id                String   @id @default(cuid())
+  code              String   @unique
+  montantCentimes   Int
+  soldeCentimes     Int
+  acheteurId        String?
+  acheteurEmail     String
+  beneficiaireEmail String?
+  message           String?
+  expireLe          DateTime // un an après l'achat
+  creeLe            DateTime @default(now())
+
+  acheteur User?   @relation("CartesAchetees", fields: [acheteurId], references: [id])
+  achats   Achat[] @relation("CarteUtilisee")
+}
+
+model Parrainage {
+  id         String   @id @default(cuid())
+  parrainId  String
+  filleulId  String   @unique
+  creeLe     DateTime @default(now())
+  creditePar String? // identifiant de l'achat qui a déclenché la réduction du parrain
+
+  parrain User    @relation("Parrain", fields: [parrainId], references: [id])
+  filleul User    @relation("Filleul", fields: [filleulId], references: [id])
+  achats  Achat[]
+}
+
+model Pass {
+  id                 String    @id @default(cuid())
+  userId             String
+  type               TypePass
+  collectionId       String?
+  debut              DateTime
+  fin                DateTime?
+  stripeAbonnementId String?   @unique
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collection Collection? @relation(fields: [collectionId], references: [id])
+}
+
+model InscriptionPrevenir {
+  id             String    @id @default(cuid())
+  email          String
+  destinationId  String
+  consentementLe DateTime  @default(now())
+  desinscritLe   DateTime?
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@unique([email, destinationId])
+}
+
+// ─── Communauté ──────────────────────────────────────────────────────────────
+
+model Contribution {
+  id             String           @id @default(cuid())
+  auteurId       String?
+  auteurPrenom   String
+  auteurEmail    String
+  destinationId  String
+  nomLieu        String
+  quartier       String
+  categorie      Categorie
+  prix           Int
+  profils        Profil[]
+  pourquoi       String
+  estHabitant    Boolean
+  derniereVisite DateTime         @db.Date
+  travailleIci   Boolean          @default(false)
+  statut         StatutModeration @default(EN_ATTENTE)
+  adresseId      String? // adresse publiée à partir de cette reco
+  creeLe         DateTime         @default(now())
+  modereeLe      DateTime?
+
+  auteur      User?       @relation(fields: [auteurId], references: [id], onDelete: SetNull)
+  destination Destination @relation(fields: [destinationId], references: [id])
+  adresse     Adresse?    @relation(fields: [adresseId], references: [id], onDelete: SetNull)
+
+  @@index([statut])
+}
+
+model Signalement {
+  id        String           @id @default(cuid())
+  auteurId  String?
+  escaleId  String
+  adresseId String?
+  type      TypeSignalement
+  message   String
+  statut    StatutModeration @default(EN_ATTENTE)
+  creeLe    DateTime         @default(now())
+  traiteLe  DateTime?
+
+  auteur  User?    @relation(fields: [auteurId], references: [id], onDelete: SetNull)
+  escale  Escale   @relation(fields: [escaleId], references: [id], onDelete: Cascade)
+  adresse Adresse? @relation(fields: [adresseId], references: [id], onDelete: SetNull)
+
+  @@index([statut])
+}
+
+model Recompense {
+  id          String         @id @default(cuid())
+  userId      String
+  type        TypeRecompense
+  niveau      Int? // nombre de recos ou de signalements atteint
+  codePromoId String?        @unique
+  escaleId    String?
+  accordeeLe  DateTime       @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codePromo CodePromo? @relation(fields: [codePromoId], references: [id])
+
+  @@unique([userId, type, niveau])
+}
+
+// ─── Administration ──────────────────────────────────────────────────────────
+
+model JournalAdmin {
+  id      String   @id @default(cuid())
+  userId  String
+  action  String
+  cible   String
+  details Json?
+  creeLe  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([creeLe])
+}
