@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* Les jetons de design (couleurs, polices, espacements) arrivent avec le ticket T-016. */
+:root {
+  --background: #ffffff;
+  --foreground: #14213d;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0e1630;
+    --foreground: #f2f4f8;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
