@@ -39,6 +39,18 @@ Le site s'ouvre sur http://localhost:3000.
 - Motion pour les animations (ticket T-021)
 - Vitest et Playwright pour les tests (ticket T-013)
 
+## Base de données
+
+Le modèle de données est dans `prisma/schema.prisma` (Prisma 7, PostgreSQL). Prisma ne charge pas `.env.local` tout seul : exporte d'abord les variables, par exemple avec `set -a; source .env.local; set +a`.
+
+| Commande             | Rôle                                                                          |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `npm run db:migrate` | Crée une migration à partir du schéma et l'applique en local                  |
+| `npm run db:deploy`  | Applique les migrations existantes                                            |
+| `npm run db:seed`    | Ajoute les vingt destinations et la structure des escales de Rome et de Paris |
+
+En production, le conteneur applique les migrations à chaque démarrage, avant de lancer le site.
+
 ## Système de design
 
 La page `/design-system` montre les couleurs, les polices, les composants et les autocollants. Elle n'est pas référencée par les moteurs de recherche.
