@@ -39,6 +39,10 @@ Le site s'ouvre sur http://localhost:3000.
 - Motion pour les animations (ticket T-021)
 - Vitest et Playwright pour les tests (ticket T-013)
 
+## Système de design
+
+La page `/design-system` montre les couleurs, les polices, les composants et les autocollants. Elle n'est pas référencée par les moteurs de recherche.
+
 ## Configuration
 
 Copie `.env.example` en `.env.local` pour le développement. Aucune vraie clé ne doit être versionnée.
