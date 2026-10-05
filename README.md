@@ -49,7 +49,13 @@ Le modèle de données est dans `prisma/schema.prisma` (Prisma 7, PostgreSQL). P
 | `npm run db:deploy`  | Applique les migrations existantes                                            |
 | `npm run db:seed`    | Ajoute les vingt destinations et la structure des escales de Rome et de Paris |
 
-En production, le conteneur applique les migrations à chaque démarrage, avant de lancer le site.
+En production, le script `scripts/migrations.sh` tourne à chaque démarrage du conteneur, avant le site :
+
+1. il applique les migrations déjà créées ;
+2. il compare la base au schéma et, s'il y a une différence, crée une migration et l'applique ;
+3. il ajoute les données de départ si la base est vide.
+
+Les migrations sont gardées dans un volume persistant de Coolify, monté sur `/outils/prisma/migrations`. Une migration qui pourrait effacer des données est refusée, sauf si la variable `ALLOW_DATA_LOSS=1` est ajoutée le temps d'un déploiement.
 
 ## Système de design
 
@@ -74,8 +80,9 @@ Le site est déployé par [Coolify](https://coolify.io), derrière son proxy Tra
 3. Garde l'adresse sslip.io proposée par Coolify, en HTTPS, tant que le nom de domaine n'est pas acheté.
 4. Règle le contrôle de santé sur le chemin `/api/health`.
 5. Désactive le déploiement automatique de Coolify, pour que la CI soit seule à le déclencher.
-6. Dans « Keys & Tokens », puis « API Tokens », crée un jeton avec la permission de déploiement.
-7. Dans la configuration de l'application, section « Webhooks », copie le « Deploy Webhook (auth required) ».
-8. Sur GitHub, dans Settings, puis « Secrets and variables » et « Actions », ajoute deux secrets : `COOLIFY_WEBHOOK` (le webhook) et `COOLIFY_TOKEN` (le jeton).
+6. Dans « Persistent Storage », ajoute un volume monté sur `/outils/prisma/migrations`.
+7. Dans « Keys & Tokens », puis « API Tokens », crée un jeton avec la permission de déploiement.
+8. Dans la configuration de l'application, section « Webhooks », copie le « Deploy Webhook (auth required) ».
+9. Sur GitHub, dans Settings, puis « Secrets and variables » et « Actions », ajoute deux secrets : `COOLIFY_WEBHOOK` (le webhook) et `COOLIFY_TOKEN` (le jeton).
 
 Si l'API de Coolify est désactivée, active-la dans « Settings », puis « Advanced ».

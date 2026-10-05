@@ -1,5 +1,5 @@
-// Données de départ (ticket T-008) : les vingt destinations et escales, et la structure des escales
-// de Rome, de Paris et de leurs escales voisines. Les textes arrivent avec les tickets de contenu.
+// Données de départ (ticket T-008) : les vingt destinations, et la structure des escales de Rome,
+// de Paris et de leurs escales voisines. Les textes arrivent avec les tickets de contenu.
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, TypeDestination } from "../src/generated/prisma/client";
 import { villes } from "../src/content/villes";
@@ -19,6 +19,12 @@ const PRIX_ESCALE_COMPLETE = 1999;
 const PRIX_ESCALE_VOISINE = 499;
 
 async function main() {
+  // Les données de départ ne s'ajoutent que dans une base vide ; --force les remet à jour.
+  if (!process.argv.includes("--force") && (await db.destination.count()) > 0) {
+    console.log("Données de départ déjà présentes.");
+    return;
+  }
+
   for (const v of villes) {
     const donnees = {
       nom: v.nom,
