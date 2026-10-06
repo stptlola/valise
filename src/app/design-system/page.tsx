@@ -211,7 +211,7 @@ export default function DesignSystem() {
               <Sticker
                 id={id}
                 title={`Autocollant de ${nomsAutocollants[id]}`}
-                className="max-w-36"
+                className="w-full max-w-36"
               />
               <span className="text-sm font-bold">{nomsAutocollants[id]}</span>
             </li>

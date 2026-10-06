@@ -13,7 +13,7 @@ export function Sticker({ id, className, title }: StickerProps) {
   return (
     <svg
       viewBox={viewBox}
-      className={cn("autocollant block h-auto w-full", className)}
+      className={cn("autocollant block h-auto", className)}
       role={title ? "img" : undefined}
       aria-label={title}
       aria-hidden={title ? undefined : true}
