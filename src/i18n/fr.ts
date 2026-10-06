@@ -22,6 +22,33 @@ export const fr = {
     enConstruction: "Cette page arrive bientôt.",
     retourAccueil: "Retour à l'accueil",
   },
+  destinations: {
+    titre: "Destinations",
+    intro:
+      "Rome et Paris ont leur escale complète. Pour les autres destinations, une fiche gratuite t'aide à préparer le voyage, en attendant leur escale.",
+    escaleComplete: "Escale complète",
+    ficheGratuite: "Fiche gratuite",
+    ficheEnPreparation:
+      "La fiche de cette destination est en cours de rédaction.",
+    escaleBientot: "La page de l'escale arrive bientôt.",
+    prevenirTitre: "Préviens-moi quand l'escale sort",
+    prevenirTexte:
+      "Laisse ton e-mail : tu seras parmi les premiers à le savoir.",
+  },
+  prevenir: {
+    email: "Ton e-mail",
+    consentement: (nom: string) =>
+      `J'accepte de recevoir un e-mail quand l'escale de ${nom} sort. Je pourrai me désinscrire à tout moment.`,
+    bouton: "Préviens-moi",
+    envoi: "Envoi…",
+    okNeutre: "C'est noté.",
+    ok: (nom: string) =>
+      `C'est noté : on te prévient dès que l'escale de ${nom} sort.`,
+    emailInvalide: "Cette adresse e-mail ne semble pas valide.",
+    consentementManquant: "Coche la case pour accepter de recevoir cet e-mail.",
+    destinationInconnue: "Cette destination n'existe pas.",
+    pieges: "Ne pas remplir",
+  },
   erreurs: {
     introuvableTitre: "Cette page n'existe pas",
     introuvableTexte: "L'adresse a peut-être changé, ou la page n'existe plus.",
