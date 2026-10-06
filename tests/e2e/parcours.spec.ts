@@ -63,3 +63,27 @@ test("la page d'état indique l'image et l'accès à la base", async ({
   expect(etat).toHaveProperty("image");
   expect(["ok", "erreur"]).toContain(etat.base);
 });
+
+test("une adresse inconnue affiche la page introuvable", async ({ page }) => {
+  const reponse = await page.goto("/cette-page-n-existe-pas");
+  expect(reponse?.status()).toBe(404);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Cette page n'existe pas",
+  );
+});
+
+test("le site n'est pas référencé tant que le domaine n'est pas en place", async ({
+  request,
+}) => {
+  const robots = await (await request.get("/robots.txt")).text();
+  expect(robots).toContain("Disallow: /");
+});
+
+test("le système de design montre la carte et la ligne de métro", async ({
+  page,
+}) => {
+  await page.goto("/design-system");
+  await expect(page.locator("[data-repere]")).toHaveCount(20);
+  const ligne = page.getByRole("list", { name: "Jour 1 à Rome, exemple" });
+  await expect(ligne.getByRole("listitem")).toHaveCount(5);
+});

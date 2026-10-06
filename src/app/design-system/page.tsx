@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { CarteMonde } from "@/components/carte/CarteMonde";
+import { LigneMetro } from "@/components/itineraire/LigneMetro";
 import { Sticker } from "@/components/stickers/Sticker";
 import { stickerIds } from "@/components/stickers/artwork";
 import { Button, ButtonLink } from "@/components/ui/Button";
@@ -150,6 +152,56 @@ export default function DesignSystem() {
             Une carte sur fond de surface, avec une bordure fine.
           </p>
         </Card>
+      </Section>
+
+      <Section titre="Ligne de métro">
+        <p className="text-discret">
+          Un itinéraire d&apos;exemple, à la couleur de Rome. Les étapes réelles
+          viendront des escales.
+        </p>
+        <div className="max-w-md">
+          <LigneMetro
+            titre="Jour 1 à Rome, exemple"
+            couleur="#C47A2C"
+            stations={[
+              { moment: "Matin", titre: "Colisée", detail: "Étape d'exemple" },
+              {
+                moment: "Matin",
+                titre: "Forum romain",
+                detail: "Étape d'exemple",
+              },
+              { moment: "Midi", titre: "Monti", detail: "Étape d'exemple" },
+              {
+                moment: "Après-midi",
+                titre: "Panthéon",
+                detail: "Étape d'exemple",
+              },
+              {
+                moment: "Soir",
+                titre: "Trastevere",
+                detail: "Étape d'exemple",
+              },
+            ]}
+          />
+        </div>
+      </Section>
+
+      <Section titre="Carte du monde">
+        <p className="text-discret">
+          Les vingt destinations et escales voisines, avec l&apos;Italie et la
+          France mises en valeur.
+        </p>
+        <CarteMonde
+          titre="Carte du monde des destinations de Valise"
+          paysActifs={["IT", "FR"]}
+          reperes={villes.map((v) => ({
+            id: v.id,
+            nom: v.nom,
+            latitude: v.latitude,
+            longitude: v.longitude,
+            couleur: v.couleur,
+          }))}
+        />
       </Section>
 
       <Section titre="Autocollants">
