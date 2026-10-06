@@ -53,3 +53,13 @@ test("une rubrique du menu mène à sa page", async ({ page, isMobile }) => {
     "Outils gratuits",
   );
 });
+
+test("la page d'état indique l'image et l'accès à la base", async ({
+  request,
+}) => {
+  const reponse = await request.get("/api/etat");
+  expect(reponse.ok()).toBe(true);
+  const etat = await reponse.json();
+  expect(etat).toHaveProperty("image");
+  expect(["ok", "erreur"]).toContain(etat.base);
+});

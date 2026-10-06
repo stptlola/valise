@@ -34,6 +34,7 @@ RUN version() { node -p "const p = require('/tmp/package.json'); (p.dependencies
 # 4. Image finale, avec uniquement la sortie autonome de Next.js
 FROM base AS runner
 ENV NODE_ENV=production \
+    VALISE_IMAGE=dockerfile \
     PORT=3000 \
     HOSTNAME=0.0.0.0
 COPY --from=outils /outils /outils
