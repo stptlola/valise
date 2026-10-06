@@ -22,6 +22,14 @@ export const fr = {
     enConstruction: "Cette page arrive bientôt.",
     retourAccueil: "Retour à l'accueil",
   },
+  erreurs: {
+    introuvableTitre: "Cette page n'existe pas",
+    introuvableTexte: "L'adresse a peut-être changé, ou la page n'existe plus.",
+    erreurTitre: "Un problème est survenu",
+    erreurTexte: "La page n'a pas pu s'afficher. Réessaie dans un instant.",
+    reessayer: "Réessayer",
+    voirDestinations: "Voir les destinations",
+  },
   pied: {
     droits: "© 2026 Valise",
   },
