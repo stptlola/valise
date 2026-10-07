@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 import { CouleurVille } from "@/components/destinations/CouleurVille";
 import { FormulairePrevenir } from "@/components/destinations/FormulairePrevenir";
 import { Sticker } from "@/components/stickers/Sticker";
 import { estStickerId } from "@/components/stickers/estStickerId";
+import { ButtonLink } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { texteSur } from "@/design/contraste";
-import { TypeDestination } from "@/generated/prisma/client";
+import { Statut, TypeDestination } from "@/generated/prisma/client";
 import { messages } from "@/i18n";
 import { trouverDestination } from "@/lib/destinations";
 
@@ -40,6 +42,12 @@ export default async function Fiche(props: PageProps<"/destinations/[id]">) {
 
   const complete = destination.type === TypeDestination.COMPLETE;
   const texte = texteSur(destination.couleur);
+  const escale = destination.escale;
+  const escaleLisible =
+    complete &&
+    !!escale &&
+    escale._count.parties > 0 &&
+    (escale.statut === Statut.PUBLIE || (await draftMode()).isEnabled);
 
   return (
     <>
@@ -69,11 +77,17 @@ export default async function Fiche(props: PageProps<"/destinations/[id]">) {
       </div>
 
       <Container className="flex flex-col gap-8 py-12">
-        <p className="text-discret max-w-2xl">
-          {complete
-            ? messages.destinations.escaleBientot
-            : messages.destinations.ficheEnPreparation}
-        </p>
+        {escaleLisible ? (
+          <ButtonLink href={`/destinations/${destination.id}/escale`} className="self-start">
+            {messages.escale.lire}
+          </ButtonLink>
+        ) : (
+          <p className="text-discret max-w-2xl">
+            {complete
+              ? messages.destinations.escaleBientot
+              : messages.destinations.ficheEnPreparation}
+          </p>
+        )}
 
         {!complete && (
           <Card className="max-w-xl">

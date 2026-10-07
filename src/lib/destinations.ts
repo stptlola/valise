@@ -36,7 +36,9 @@ export async function trouverDestination(id: string) {
     where: { id },
     include: {
       climat: { orderBy: { mois: "asc" } },
-      escale: { select: { prixCentimes: true } },
+      escale: {
+        select: { prixCentimes: true, statut: true, _count: { select: { parties: true } } },
+      },
     },
   });
 }

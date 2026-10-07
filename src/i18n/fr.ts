@@ -35,6 +35,26 @@ export const fr = {
     prevenirTexte:
       "Laisse ton e-mail : tu seras parmi les premiers à le savoir.",
   },
+  escale: {
+    titre: (nom: string) => `Escale à ${nom}`,
+    misAJour: (date: string) => `Mise à jour le ${date}`,
+    lire: "Lire l'escale",
+    sommaire: "Sommaire",
+    sommaireAria: "Sommaire de l'escale",
+    reservee: "Réservée",
+    nouveautesTitre: "Les nouveautés",
+    nouveautesLien: "Le détail dans la partie 2",
+    verrouTitre: "La suite est réservée à l'escale complète",
+    verrouTexte: (prix: string) =>
+      `L'escale complète, à ${prix}, ouvre toutes les parties : les itinéraires détaillés, les adresses testées sur place, le budget, les conseils et les bonus.`,
+    verrouBientot: "L'achat ouvrira au lancement de Valise, début 2027.",
+    apercuTexte:
+      "Aperçu : tu vois l'escale en entier, même si elle n'est pas encore publiée.",
+    apercuQuitter: "Quitter l'aperçu",
+    nouvelOnglet: " (nouvel onglet)",
+    tableau: "Tableau",
+    partieAImporter: "Cette partie n'est pas encore importée dans le site.",
+  },
   prevenir: {
     email: "Ton e-mail",
     consentement: (nom: string) =>
