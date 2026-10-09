@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 import { CouleurVille } from "@/components/destinations/CouleurVille";
 import { FormulairePrevenir } from "@/components/destinations/FormulairePrevenir";
@@ -11,6 +10,7 @@ import { Container } from "@/components/ui/Container";
 import { texteSur } from "@/design/contraste";
 import { Statut, TypeDestination } from "@/generated/prisma/client";
 import { messages } from "@/i18n";
+import { apercuActif } from "@/lib/apercu";
 import { trouverDestination } from "@/lib/destinations";
 
 // Fiche d'une destination (ticket T-032). Ses textes arrivent avec la rédaction des fiches (T-098).
@@ -47,7 +47,7 @@ export default async function Fiche(props: PageProps<"/destinations/[id]">) {
     complete &&
     !!escale &&
     escale._count.parties > 0 &&
-    (escale.statut === Statut.PUBLIE || (await draftMode()).isEnabled);
+    (escale.statut === Statut.PUBLIE || (await apercuActif()));
 
   return (
     <>

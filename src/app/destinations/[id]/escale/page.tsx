@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 import { Blocs } from "@/components/escale/Blocs";
 import { BandeauApercu } from "@/components/escale/BandeauApercu";
@@ -14,6 +13,7 @@ import { texteSur } from "@/design/contraste";
 import { Statut } from "@/generated/prisma/client";
 import { messages } from "@/i18n";
 import { dateLongue, partiesPourLecteur, prix } from "@/lib/escale-lecture";
+import { apercuActif } from "@/lib/apercu";
 import { trouverEscale } from "@/lib/escales";
 
 // Page d'une escale complète (ticket T-034) : dix parties, un sommaire, la date de mise à jour
@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 
 async function escaleLisible(id: string) {
   const escale = await trouverEscale(id);
-  const apercu = (await draftMode()).isEnabled;
+  const apercu = await apercuActif();
   if (!escale || escale.parties.length === 0) return null;
   if (escale.statut !== Statut.PUBLIE && !apercu) return null;
   return { escale, apercu };

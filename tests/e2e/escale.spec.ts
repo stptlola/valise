@@ -9,6 +9,19 @@ test("un lien d'aperçu avec un mauvais secret est refusé", async ({ request })
   expect(reponse.status()).toBe(401);
 });
 
+test("le cookie d'aperçu est accepté en HTTP, comme sur sslip.io", async ({ request }) => {
+  test.skip(!process.env.APERCU_SECRET, "APERCU_SECRET requis");
+  const reponse = await request.get(
+    `/api/apercu?secret=${encodeURIComponent(process.env.APERCU_SECRET!)}&destination=rome`,
+    { maxRedirects: 0 },
+  );
+  expect(reponse.status()).toBe(303);
+  expect(reponse.headers()["location"]).toBe("/destinations/rome/escale");
+  const cookie = reponse.headers()["set-cookie"];
+  expect(cookie).toContain("valise_apercu=");
+  expect(cookie).not.toContain("Secure");
+});
+
 test.describe("avec la base de données", () => {
   // Ces parcours lisent la base : ils demandent DATABASE_URL, avec les contenus importés.
   test.skip(!process.env.DATABASE_URL, "base de données requise");
